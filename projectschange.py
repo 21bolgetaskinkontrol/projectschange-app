@@ -15,20 +15,32 @@ headers = {
     'Prefer': 'return=representation'
 }
 
-@app.route("/project/update", methods=["POST"])
-def update_project():
-    project = request.get_json()
-    if not project:
-        return jsonify({"error": "JSON body missing"}), 400
-    response = requests.post(
-    f"{SUPABASE_URL}/rest/v1/Projects",
-    headers=headers,
-    json=project
-)
-    if response.status_code in [200, 201]:
-        return jsonify({"message": "Project added successfully", "data": response.json()}), 201
+@app.route("/project/edit-by-name", methods=["PATCH"])
+def edit_project_by_name():
+    data = request.get_json()
+
+    if not data or "İşin Adı" not in data or "fields_to_update" not in data:
+        return jsonify({"error": "JSON must include 'İşin Adı' and 'fields_to_update'"}), 400
+
+    işin_adı = data["İşin Adı"]
+    update_fields = data["fields_to_update"]
+
+    response = requests.patch(
+        f"{SUPABASE_URL}/rest/v1/Projects?İşin%20Adı=eq.{işin_adı}",
+        headers=headers,
+        json=update_fields
+    )
+
+    try:
+        resp_data = response.json()
+    except Exception:
+        resp_data = response.text
+
+    if response.status_code in [200, 204]:
+        return jsonify({"message": "Project updated successfully", "data": resp_data}), 200
     else:
-        return jsonify({"error": response.text}), response.status_code
+        return jsonify({"error": resp_data}), response.status_code
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
