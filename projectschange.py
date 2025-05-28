@@ -14,7 +14,7 @@ def update_project():
     try:
         data = request.get_json()
         id = data.get("id", "1")
-        print(data.get().values())
+        print(data)
         data_without_id = {k: v for k, v in data.items() if k != "id"}
         response = supabase.table("Projects").update(data_without_id).eq("id", id ).execute()
 
